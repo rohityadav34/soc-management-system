@@ -1,16 +1,22 @@
 const mongoose = require("mongoose");
 
 const flatSchema = new mongoose.Schema({
-    flatnumber:{
+    flatNumber:{
         type:Number,
         trim:true
     },
     block:{
-        type:"string"
+        type:String
     },
-    flat:{
+    floor:{
         type:Number
+    },
+    isaccopied:{
+        type:Boolean,
+        default:false
     }
 });
 
-module.exports = [ "Flat", flatSchema];
+const Flat = mongoose.model('Flat' , flatSchema)
+
+module.exports =  Flat;

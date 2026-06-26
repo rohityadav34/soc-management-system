@@ -1,8 +1,14 @@
 {
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongoose": "^9.5.0"
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.5.0",
+    "nodemailer": "^8.0.7",
+    "socket.io": "^4.8.3"
   },
   "name": "backend",
   "version": "1.0.0",
@@ -11,7 +17,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "seed:role": "node ./seeder/seedrole.js",
+    "seed:user": "node ./seeder/seeduser.js",
+    "seed:flat": "node ./seeder/seedflat.js"
   },
   "keywords": [],
   "author": "",
