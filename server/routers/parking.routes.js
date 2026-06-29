@@ -16,7 +16,7 @@ const checkRole = require("../middleware/checkRole");
 router.get(
   "/",
   verifyToken,
-  checkRole("admin", "guard"),
+  checkRole(["admin", "security-guard"]),
   getAllParking
 );
 
@@ -24,7 +24,7 @@ router.get(
 router.post(
   "/",
   verifyToken,
-  checkRole("admin"),
+  checkRole(["admin"]),
   createParking
 );
 
@@ -32,7 +32,7 @@ router.post(
 router.patch(
   "/:id",
   verifyToken,
-  checkRole("admin"),
+  checkRole(["admin"]),
   updateParking
 );
 
@@ -40,7 +40,7 @@ router.patch(
 router.delete(
   "/:id",
   verifyToken,
-  checkRole("admin"),
+  checkRole(["admin"]),
   deleteParking
 );
 

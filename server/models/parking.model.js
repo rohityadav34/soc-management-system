@@ -34,6 +34,11 @@ const parkingSchema = new mongoose.Schema(
       enum: ["vacant", "occupied"],
       default: "vacant",
     },
+
+    allottedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

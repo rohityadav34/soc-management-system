@@ -32,6 +32,20 @@ type: String
     type: mongoose.Schema.Types.ObjectId,
     ref: "Flat",
   },
+  members: [
+    {
+      name: { type: String, required: true },
+      relation: { type: String, required: true },
+      phone: { type: String, required: true },
+    }
+  ],
+  vehicles: [
+    {
+      vehicleType: { type: String, required: true },
+      vehicleNumber: { type: String, required: true },
+      parkingSlot: { type: String, required: true },
+    }
+  ],
 });
 
 const User = mongoose.model("User", userSchema);

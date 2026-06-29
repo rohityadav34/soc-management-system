@@ -17,6 +17,7 @@ exports.createParking = async (req, res) => {
       flatNumber,
       vehicleNumber,
       status: vehicleNumber ? "occupied" : "vacant",
+      allottedAt: vehicleNumber ? new Date() : null,
     });
 
     res.status(201).json({
@@ -54,9 +55,19 @@ exports.getAllParking = async (req, res) => {
 
 exports.updateParking = async (req, res) => {
   try {
+    const updateData = { ...req.body };
+    if (updateData.status === "occupied") {
+      updateData.allottedAt = new Date();
+    } else if (updateData.status === "vacant") {
+      updateData.allottedAt = null;
+      updateData.residentName = "";
+      updateData.vehicleNumber = "";
+      updateData.flatNumber = "";
+    }
+
     const parking = await Parking.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       {
         new: true,
       }

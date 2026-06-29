@@ -19,7 +19,7 @@ import Payments from '../pages/Payments';
 import Deliveries from '../pages/Deliveries';
 import Parking from '../pages/Parking';
 import Emergency from '../pages/Emergency';
-import ResidentDashboard from '../pages/ResidentDashboard';
+import ResidentDashboard from '../components/ResidentDashboard';
 import Profile from '../pages/Profile';
 
 const RoleBasedIndex = () => {

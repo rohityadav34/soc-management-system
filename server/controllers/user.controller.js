@@ -171,3 +171,98 @@ exports.deleteUser = async (req, res) => {
     });
   }
 };
+
+exports.addMember = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, relation, phone } = req.body;
+
+    if (!name || !relation || !phone) {
+      return res.status(400).json({ message: "All member fields (name, relation, phone) are required" });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.members.push({ name, relation, phone });
+    await user.save();
+
+    res.status(200).json({
+      message: "Member added successfully",
+      data: user.members,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteMember = async (req, res) => {
+  try {
+    const { id, memberId } = req.params;
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.members = user.members.filter(member => member._id.toString() !== memberId);
+    await user.save();
+
+    res.status(200).json({
+      message: "Member deleted successfully",
+      data: user.members,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.addVehicle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { vehicleType, vehicleNumber, parkingSlot } = req.body;
+
+    if (!vehicleType || !vehicleNumber || !parkingSlot) {
+      return res.status(400).json({ message: "All vehicle fields (vehicleType, vehicleNumber, parkingSlot) are required" });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.vehicles.push({ vehicleType, vehicleNumber, parkingSlot });
+    await user.save();
+
+    res.status(200).json({
+      message: "Vehicle added successfully",
+      data: user.vehicles,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteVehicle = async (req, res) => {
+  try {
+    const { id, vehicleId } = req.params;
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.vehicles = user.vehicles.filter(vehicle => vehicle._id.toString() !== vehicleId);
+    await user.save();
+
+    res.status(200).json({
+      message: "Vehicle deleted successfully",
+      data: user.vehicles,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+

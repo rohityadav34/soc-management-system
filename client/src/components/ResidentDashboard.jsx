@@ -21,7 +21,7 @@ import { fetchNotices } from "../redux/slice/noticeSlice";
 import { fetchComplaints } from "../redux/slice/complaintSlice";
 import { fetchBills } from "../redux/slice/billSlice";
 import { fetchVisitors } from "../redux/slice/visitorSlice";
-import { Badge } from "../components/ui";
+import { Badge } from "./ui";
 
 function ResidentDashboard() {
   const dispatch = useDispatch();

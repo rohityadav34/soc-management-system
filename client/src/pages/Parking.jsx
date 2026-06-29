@@ -19,12 +19,14 @@ import {
   updateParking,
   deleteParking,
 } from "../redux/slice/parkingslice";
+import { fetchUsers } from "../redux/slice/userSlice";
 
 function Parking() {
   const dispatch = useDispatch();
   const { parkings = [], loading, error, message } = useSelector(
     (state) => state.parking
   );
+  const { users = [] } = useSelector((state) => state.user);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [blockFilter, setBlockFilter] = useState("all");
@@ -39,13 +41,34 @@ function Parking() {
   const [parkingNumber, setParkingNumber] = useState("");
   
   const [selectedSpot, setSelectedSpot] = useState(null);
+  const [selectedResidentId, setSelectedResidentId] = useState("");
   const [residentName, setResidentName] = useState("");
+  const [flatNumber, setFlatNumber] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     dispatch(fetchParkings());
+    dispatch(fetchUsers());
   }, [dispatch]);
+
+  const eligibleUsers = (users || []).filter((u) => {
+    const roleName = u.role?.role?.toLowerCase() || "";
+    return roleName === "resident" || roleName === "security-guard" || roleName === "security_guard" || roleName === "guard";
+  });
+
+  const handleResidentChange = (e) => {
+    const val = e.target.value;
+    setSelectedResidentId(val);
+    const userObj = eligibleUsers.find((u) => u._id === val);
+    if (userObj) {
+      setResidentName(userObj.name);
+      setFlatNumber(userObj.flat ? String(userObj.flat.flatNumber) : "");
+    } else {
+      setResidentName("");
+      setFlatNumber("");
+    }
+  };
 
   // Handle toast notifications
   useEffect(() => {
@@ -106,7 +129,9 @@ function Parking() {
   const handleOpenBookModal = (spot) => {
     setSelectedSpot(spot);
     setIsEditing(false);
+    setSelectedResidentId("");
     setResidentName("");
+    setFlatNumber("");
     setVehicleNumber("");
     setShowBookModal(true);
   };
@@ -115,7 +140,10 @@ function Parking() {
   const handleOpenEditModal = (spot) => {
     setSelectedSpot(spot);
     setIsEditing(true);
+    const matchedUser = eligibleUsers.find((r) => r.name === spot.residentName);
+    setSelectedResidentId(matchedUser ? matchedUser._id : "");
     setResidentName(spot.residentName || "");
+    setFlatNumber(spot.flatNumber || "");
     setVehicleNumber(spot.vehicleNumber || "");
     setShowBookModal(true);
   };
@@ -132,6 +160,7 @@ function Parking() {
       id: selectedSpot._id,
       parkingData: {
         residentName,
+        flatNumber,
         vehicleNumber,
         status: "occupied"
       }
@@ -139,7 +168,9 @@ function Parking() {
       if (res.meta.requestStatus === "fulfilled") {
         toast.success(isEditing ? "Booking updated successfully!" : "Slot booked successfully!");
         setShowBookModal(false);
+        setSelectedResidentId("");
         setResidentName("");
+        setFlatNumber("");
         setVehicleNumber("");
       }
     });
@@ -434,14 +465,29 @@ function Parking() {
         }
       >
         <form onSubmit={handleBookOrUpdate} className="space-y-4 py-2">
-          <Input
-            label="Resident Name"
-            placeholder="John Doe"
-            value={residentName}
-            onChange={(e) => setResidentName(e.target.value)}
-            required
-            leftIcon={<User size={16} />}
-          />
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-slate-700 block ml-0.5">
+              Select Resident / Guard
+            </label>
+            <select
+              value={selectedResidentId}
+              onChange={handleResidentChange}
+              className="w-full px-3 py-2.5 text-sm bg-white border border-slate-200 rounded-lg outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all"
+              required
+            >
+              <option value="">Choose Resident / Guard</option>
+              {eligibleUsers.map((r) => (
+                <option key={r._id} value={r._id}>
+                  {r.name} ({r.role?.role || "Resident"}{r.flat ? `, Flat: ${r.flat.block}-${r.flat.flatNumber}` : ""})
+                </option>
+              ))}
+            </select>
+          </div>
+          {flatNumber && (
+            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs text-slate-600">
+              Selected Person Flat: <strong className="text-slate-800">{flatNumber}</strong>
+            </div>
+          )}
           <Input
             label="Vehicle Number"
             placeholder="MH 12 AB 1234"
