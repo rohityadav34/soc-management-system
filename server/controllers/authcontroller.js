@@ -137,10 +137,11 @@ exports.login = async (req, res) => {
     const token = generateToken(payload);
     console.log(token);
 
+    const isProduction = process.env.NODE_ENV === "production";
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "lax",
-      secure: false,
+      sameSite: isProduction ? "none" : "lax",
+      secure: isProduction ? true : false,
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -165,7 +166,11 @@ exports.verify = async (req, res) => {
 
 exports.logout = async (req, res) => {
   try {
+    const isProduction = process.env.NODE_ENV === "production";
     res.cookie("token", null, {
+      httpOnly: true,
+      sameSite: isProduction ? "none" : "lax",
+      secure: isProduction ? true : false,
       maxAge: 0,
     });
 
@@ -209,10 +214,11 @@ exports.setupInitialPassword = async (req, res) => {
     const token = generateToken(payload);
 
     // Set cookie
+    const isProduction = process.env.NODE_ENV === "production";
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "lax",
-      secure: false,
+      sameSite: isProduction ? "none" : "lax",
+      secure: isProduction ? true : false,
       maxAge: 24 * 60 * 60 * 1000,
     });
 
