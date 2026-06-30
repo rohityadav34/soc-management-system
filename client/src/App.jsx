@@ -14,7 +14,8 @@ function App() {
   const [countdown, setCountdown] = useState(60);
 
   useEffect(() => {
-    const socketInstance = io('http://localhost:5000');
+     const backendUrl = import.meta.env.VITE_API_URL.replace("/api/v1", "");
+    const socketInstance = io(backendUrl);
     setSocket(socketInstance);
 
     socketInstance.on('connect', () => {
