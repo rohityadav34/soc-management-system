@@ -55,42 +55,45 @@ exports.register = async (req, res) => {
     const alluserData = await User.findById(NewUser._id).populate("role");
     console.log(alluserData);
 
-    const resetLink = `http://localhost:5173/reset-setup-password?email=${encodeURIComponent(NewUser.email)}`;
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    const resetLink = `${clientUrl}/reset-setup-password?email=${encodeURIComponent(NewUser.email)}`;
 
-    try {
-      await transporter.sendMail({
-        from: `SMS TEAM <${process.env.SMTP_USER}>`,
-        to: NewUser.email,
-        subject: "Welcome to Society Management System - Set Your Password",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-            <h2 style="color: #3f51b5; text-align: center;">Welcome to Society Management System!</h2>
-            <p style="color: #555; font-size: 16px; line-height: 1.6;">Hi <strong>${NewUser.name}</strong>,</p>
-            <p style="color: #555; font-size: 16px; line-height: 1.6;">Your account has been successfully created by the administrator. To activate your account, please set your password by using the temporary password below:</p>
-            
-            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; margin: 20px 0; border-left: 4px solid #3f51b5;">
-              <p style="margin: 0 0 10px 0; color: #333; font-size: 15px;"><strong>Temporary Password:</strong> 
-                <span style="font-family: monospace; font-size: 17px; font-weight: bold; background: #e8eaf6; color: #3f51b5; padding: 3px 8px; border-radius: 4px;">${password}</span>
-              </p>
-            </div>
-            
-            <p style="color: #555; font-size: 16px; line-height: 1.6; text-align: center;">
-              <a href="${resetLink}" target="_blank" style="background-color: #3f51b5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Set Your Permanent Password</a>
+    // Send email asynchronously (non-blocking) so that network blocks or latency
+    // on SMTP connections do not cause the user registration endpoint to hang.
+    transporter.sendMail({
+      from: `SMS TEAM <${process.env.SMTP_USER}>`,
+      to: NewUser.email,
+      subject: "Welcome to Society Management System - Set Your Password",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <h2 style="color: #3f51b5; text-align: center;">Welcome to Society Management System!</h2>
+          <p style="color: #555; font-size: 16px; line-height: 1.6;">Hi <strong>${NewUser.name}</strong>,</p>
+          <p style="color: #555; font-size: 16px; line-height: 1.6;">Your account has been successfully created by the administrator. To activate your account, please set your password by using the temporary password below:</p>
+          
+          <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; margin: 20px 0; border-left: 4px solid #3f51b5;">
+            <p style="margin: 0 0 10px 0; color: #333; font-size: 15px;"><strong>Temporary Password:</strong> 
+              <span style="font-family: monospace; font-size: 17px; font-weight: bold; background: #e8eaf6; color: #3f51b5; padding: 3px 8px; border-radius: 4px;">${password}</span>
             </p>
-            
-            <p style="color: #888; font-size: 13px; line-height: 1.6; margin-top: 25px;">
-              If the button above does not work, copy and paste the following link in your browser:<br>
-              <a href="${resetLink}" target="_blank" style="color: #3f51b5;">${resetLink}</a>
-            </p>
-            
-            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">
-            <p style="color: #888; font-size: 14px; text-align: center;">Best regards,<br>Society Management Team</p>
           </div>
-        `,
-      });
-    } catch (mailError) {
+          
+          <p style="color: #555; font-size: 16px; line-height: 1.6; text-align: center;">
+            <a href="${resetLink}" target="_blank" style="background-color: #3f51b5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Set Your Permanent Password</a>
+          </p>
+          
+          <p style="color: #888; font-size: 13px; line-height: 1.6; margin-top: 25px;">
+            If the button above does not work, copy and paste the following link in your browser:<br>
+            <a href="${resetLink}" target="_blank" style="color: #3f51b5;">${resetLink}</a>
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">
+          <p style="color: #888; font-size: 14px; text-align: center;">Best regards,<br>Society Management Team</p>
+        </div>
+      `,
+    }).then(() => {
+      console.log(`Welcome email successfully sent to ${NewUser.email}`);
+    }).catch((mailError) => {
       console.error("Nodemailer failed to send welcome email:", mailError.message);
-    }
+    });
 
     res.status(201).json({
       message: "success",

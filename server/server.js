@@ -26,34 +26,15 @@ const { initPrivacyWorker } = require('./lib/privacyCleanup');
 
 
 
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
-
-const checkOrigin = (origin, callback) => {
-  if (!origin) return callback(null, true);
-
-  const clientUrls = process.env.CLIENT_URL
-    ? process.env.CLIENT_URL.split(',').map(url => url.trim())
-    : [];
-
-  const isAllowed = allowedOrigins.includes(origin) ||
-                    clientUrls.includes(origin) ||
-                    (origin.endsWith('.vercel.app') && origin.includes('soc-management-system'));
-
-  if (isAllowed) {
-    callback(null, true);
-  } else {
-    callback(null, false);
-  }
-};
-
 const app = express();
 const server = http.createServer(app);
 
 // Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: checkOrigin,
+    origin: ['http://localhost:5173', 'http://localhost:5174', process.env.CLIENT_URL],
     credentials: true,
+
   },
 });
 
@@ -69,8 +50,9 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: checkOrigin,
+    origin: ['http://localhost:5173', 'http://localhost:5174', process.env.CLIENT_URL],
     credentials: true,
+
   })
 );
 
