@@ -20,6 +20,7 @@ import Deliveries from '../pages/Deliveries';
 import Parking from '../pages/Parking';
 import Emergency from '../pages/Emergency';
 import ResidentDashboard from '../components/ResidentDashboard';
+import GuardDashboard from '../components/GuardDashboard';
 import Profile from '../pages/Profile';
 
 const RoleBasedIndex = () => {
@@ -27,6 +28,7 @@ const RoleBasedIndex = () => {
   const roleLower = role?.toLowerCase();
   if (roleLower === 'admin') return <Stats />;
   if (roleLower === 'resident') return <ResidentDashboard />;
+  if (roleLower === 'security-guard' || roleLower === 'security_guard' || roleLower === 'staff') return <GuardDashboard />;
   return <ManageUsers />;
 };
 
