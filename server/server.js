@@ -29,12 +29,38 @@ const { initPrivacyWorker } = require('./lib/privacyCleanup');
 const app = express();
 const server = http.createServer(app);
 
+// CORS configuration supporting localhost and Vercel subdomains/preview urls
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000'
+];
+
+if (process.env.CLIENT_URL) {
+  allowedOrigins.push(process.env.CLIENT_URL);
+}
+
+const checkOrigin = (origin, callback) => {
+  // Allow requests with no origin (like mobile apps, curl, postman)
+  if (!origin) return callback(null, true);
+  
+  if (allowedOrigins.includes(origin)) {
+    return callback(null, true);
+  }
+  
+  // Allow Vercel preview/deployment subdomains specifically for this project
+  if (origin.endsWith('.vercel.app') && (origin.includes('soc-management-system') || origin.includes('rohit-yadavs-projects'))) {
+    return callback(null, true);
+  }
+  
+  callback(null, false);
+};
+
 // Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:5174', process.env.CLIENT_URL],
+    origin: checkOrigin,
     credentials: true,
-
   },
 });
 
@@ -50,9 +76,8 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174', process.env.CLIENT_URL],
+    origin: checkOrigin,
     credentials: true,
-
   })
 );
 
