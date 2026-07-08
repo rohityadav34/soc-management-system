@@ -25,19 +25,28 @@ export const login = createAsyncThunk(
           withCredentials: true,
         }
       );
+
+      const token = res.data?.token;
+      if (token) {
+        Cookies.set('token', token);
+      }
+
       const verifyRes = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/verify`,
         null,
         {
           withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
       );
 
       console.log(res.data);
-      return { ...res.data, ...verifyRes.data };
+      return { ...res.data, ...verifyRes.data, token };
     } catch (error) {
-      console.log(error.response.data);
-      return thunkApi.rejectWithValue(error.response.data);
+      console.log(error.response?.data);
+      return thunkApi.rejectWithValue(error.response?.data || { message: error.message });
     }
   }
 );
@@ -53,15 +62,24 @@ export const setupInitialPassword = createAsyncThunk(
           withCredentials: true,
         }
       );
+
+      const token = res.data?.token;
+      if (token) {
+        Cookies.set('token', token);
+      }
+
       const verifyRes = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/verify`,
         null,
         {
           withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
       );
 
-      return { ...res.data, ...verifyRes.data };
+      return { ...res.data, ...verifyRes.data, token };
     } catch (error) {
       return thunkApi.rejectWithValue(error.response?.data || { message: error.message });
     }
@@ -102,6 +120,9 @@ const authSlice = createSlice({
         Cookies.set('id' , id)
         Cookies.set('role', role);
         Cookies.set('isAuthenticated', action.payload.authenticated);
+        if (action.payload.token) {
+          Cookies.set('token', action.payload.token);
+        }
         console.log(state.email, state.role, state.isAuthenticated, state.name);
         console.log(action.payload);
       })
@@ -126,6 +147,9 @@ const authSlice = createSlice({
         Cookies.set('id', id);
         Cookies.set('role', role);
         Cookies.set('isAuthenticated', action.payload.authenticated);
+        if (action.payload.token) {
+          Cookies.set('token', action.payload.token);
+        }
       })
       .addCase(setupInitialPassword.rejected, (state, action) => {
         state.loading = false;
@@ -147,6 +171,7 @@ const authSlice = createSlice({
         Cookies.remove('name');
         Cookies.remove('email');
         Cookies.remove('role');
+        Cookies.remove('token');
       })
   },
 });
