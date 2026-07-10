@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import {
   Menu,
@@ -20,16 +20,35 @@ import {
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout, Signout } from '../redux/slice/authslice';
+import { fetchNotices } from '../redux/slice/noticeSlice';
+import { fetchComplaints } from '../redux/slice/complaintSlice';
+import { fetchVisitors } from '../redux/slice/visitorSlice';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, Button } from './ui';
 
 const LayoutWrapper = ({ children, navItems }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isLogoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [isNotificationOpen, setNotificationOpen] = useState(false);
+  
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { name, role, email } = useSelector((state) => state.auth);
+
+  const { notices = [] } = useSelector((state) => state.notice);
+  const { complaints = [] } = useSelector((state) => state.complaint);
+  const { visitors = [] } = useSelector((state) => state.visitor);
+
+  useEffect(() => {
+    if (role) {
+      dispatch(fetchNotices());
+      dispatch(fetchComplaints());
+      if (role.toLowerCase() === 'security-guard' || role.toLowerCase() === 'security_guard' || role.toLowerCase() === 'staff') {
+        dispatch(fetchVisitors());
+      }
+    }
+  }, [dispatch, role]);
 
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
@@ -42,6 +61,86 @@ const LayoutWrapper = ({ children, navItems }) => {
     navigate('/');
     dispatch(Signout());
   };
+
+  const getRelativeTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
+
+  const getNotifications = () => {
+    const list = [];
+    const lowerRole = role?.toLowerCase() || '';
+
+    // Add Notices for everyone
+    notices.forEach((n) => {
+      list.push({
+        id: `notice-${n._id}`,
+        title: 'New Announcement',
+        desc: n.title,
+        time: n.createdAt,
+        type: 'notice',
+      });
+    });
+
+    // Add Complaints based on role
+    complaints.forEach((c) => {
+      if (lowerRole === 'admin') {
+        list.push({
+          id: `complaint-${c._id}`,
+          title: 'New Complaint Filed',
+          desc: c.title,
+          time: c.createdAt,
+          type: 'complaint',
+        });
+      } else if (lowerRole === 'resident') {
+        list.push({
+          id: `complaint-${c._id}`,
+          title: `Complaint Status: ${c.status || 'Pending'}`,
+          desc: c.title,
+          time: c.createdAt,
+          type: 'complaint',
+        });
+      }
+    });
+
+    // Add Visitors for Guards / Residents
+    visitors.forEach((v) => {
+      if (lowerRole === 'security-guard' || lowerRole === 'security_guard' || lowerRole === 'staff') {
+        list.push({
+          id: `visitor-${v._id}`,
+          title: 'Visitor Logged',
+          desc: `${v.name} visiting Flat ${v.flat?.flatNumber}`,
+          time: v.createdAt || v.checkIn,
+          type: 'visitor',
+        });
+      } else if (lowerRole === 'resident') {
+        if (v.status?.toLowerCase() === 'pending') {
+          list.push({
+            id: `visitor-${v._id}`,
+            title: 'Visitor Approval Required',
+            desc: `${v.name} is at the gate.`,
+            time: v.createdAt || v.checkIn,
+            type: 'visitor',
+          });
+        }
+      }
+    });
+
+    // Sort newest first and limit
+    return list.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 8);
+  };
+
+  const notifications = getNotifications();
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex font-sans">
@@ -142,10 +241,52 @@ const LayoutWrapper = ({ children, navItems }) => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-slate-100 rounded-full text-slate-500 relative">
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setNotificationOpen(!isNotificationOpen)}
+                className="p-2 hover:bg-slate-100 rounded-full text-slate-500 relative transition-colors focus:outline-none"
+              >
+                <Bell size={20} />
+                {notifications.length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                )}
+              </button>
+
+              {isNotificationOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setNotificationOpen(false)} />
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden z-40 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                      <span className="font-bold text-sm text-slate-800">Notifications</span>
+                      <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-semibold">
+                        {notifications.length} New
+                      </span>
+                    </div>
+                    <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="py-8 text-center text-slate-400 text-xs">
+                          No new notifications.
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div key={n.id} className="p-4 hover:bg-slate-50/50 transition-colors flex gap-3">
+                            <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                              n.type === 'notice' ? 'bg-indigo-500' :
+                              n.type === 'complaint' ? 'bg-orange-500' : 'bg-emerald-500'
+                            }`} />
+                            <div className="space-y-0.5 min-w-0">
+                              <p className="text-xs font-bold text-slate-800 leading-snug">{n.title}</p>
+                              <p className="text-[11px] text-slate-500 truncate">{n.desc}</p>
+                              <p className="text-[9px] text-slate-400 font-medium">{getRelativeTime(n.time)}</p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             <div className="h-8 w-[1px] bg-slate-200 mx-2"></div>
             <div className="flex items-center gap-3 pl-2">
               <div className="text-right hidden md:block">

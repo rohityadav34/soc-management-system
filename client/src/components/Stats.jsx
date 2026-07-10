@@ -1,4 +1,9 @@
-import React from 'react'
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchUsers } from '../redux/slice/userSlice';
+import { fetchFlats } from '../redux/slice/flatSlice';
+import { fetchComplaints } from '../redux/slice/complaintSlice';
+import { fetchNotices } from '../redux/slice/noticeSlice';
 import { 
     LayoutDashboard, Users, Home, 
     ShieldAlert, Megaphone, CreditCard, 
@@ -9,9 +14,78 @@ import {
 
   
 function Stats() {
+  const dispatch = useDispatch();
+  
+  const { users = [], loading: loadingUsers } = useSelector((state) => state.user);
+  const { flats = [], loading: loadingFlats } = useSelector((state) => state.flat);
+  const { complaints = [], loading: loadingComplaints } = useSelector((state) => state.complaint);
+  const { notices = [], loading: loadingNotices } = useSelector((state) => state.notice);
+
+  useEffect(() => {
+    dispatch(fetchUsers());
+    dispatch(fetchFlats());
+    dispatch(fetchComplaints());
+    dispatch(fetchNotices());
+  }, [dispatch]);
+
+  // Dynamic calculations for stats cards
+  const totalResidents = users.filter(u => u.role?.name?.toLowerCase() === 'resident' || u.role?.toLowerCase() === 'resident').length;
+  
+  const totalFlats = flats.length;
+  const occupiedFlats = flats.filter(f => f.status?.toLowerCase() === 'occupied').length;
+  const occupancyRate = totalFlats > 0 ? Math.round((occupiedFlats / totalFlats) * 100) : 0;
+
+  const activeGuards = users.filter(u => {
+    const roleName = u.role?.name?.toLowerCase() || u.role?.toLowerCase() || '';
+    return roleName === 'security-guard' || roleName === 'security_guard' || roleName === 'staff';
+  }).length;
+
+  const pendingIssues = complaints.filter(c => c.status?.toLowerCase() === 'pending').length;
+
+  // Combine complaints and notices for Recent Alerts
+  const alertsList = [];
+  
+  complaints.forEach((c) => {
+    alertsList.push({
+      id: `complaint-${c._id}`,
+      title: `New complaint: "${c.title}"`,
+      desc: `Filed by ${c.resident?.name || 'Resident'}`,
+      time: c.createdAt,
+      color: 'bg-amber-500'
+    });
+  });
+
+  notices.forEach((n) => {
+    alertsList.push({
+      id: `notice-${n._id}`,
+      title: `Announcement: "${n.title}"`,
+      desc: n.description || 'Public society notice',
+      time: n.createdAt,
+      color: 'bg-indigo-500'
+    });
+  });
+
+  // Sort newest first and limit to 4
+  const recentAlerts = alertsList
+    .sort((a, b) => new Date(b.time) - new Date(a.time))
+    .slice(0, 4);
+
+  const getRelativeTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
  
   return (
-    
      <div>
         <div className="space-y-8 animate-in fade-in duration-700">
           <header>
@@ -20,10 +94,34 @@ function Stats() {
           </header>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard title="Total Residents" value="1,240" icon={Users} color="bg-blue-500" trend="+12% from last month" />
-            <StatsCard title="Occupancy Rate" value="94%" icon={Home} color="bg-emerald-500" trend="Stable" />
-            <StatsCard title="Active Guards" value="18" icon={ShieldCheck} color="bg-indigo-500" trend="Full Strength" />
-            <StatsCard title="Pending Issues" value="24" icon={ShieldAlert} color="bg-orange-500" trend="-5 since yesterday" />
+            <StatsCard 
+              title="Total Residents" 
+              value={loadingUsers ? '...' : totalResidents} 
+              icon={Users} 
+              color="bg-blue-500" 
+              trend={`${totalResidents} active profiles`} 
+            />
+            <StatsCard 
+              title="Occupancy Rate" 
+              value={loadingFlats ? '...' : `${occupancyRate}%`} 
+              icon={Home} 
+              color="bg-emerald-500" 
+              trend={`${occupiedFlats} of ${totalFlats} flats occupied`} 
+            />
+            <StatsCard 
+              title="Active Guards" 
+              value={loadingUsers ? '...' : activeGuards} 
+              icon={ShieldCheck} 
+              color="bg-indigo-500" 
+              trend={`${activeGuards} guards deployed`} 
+            />
+            <StatsCard 
+              title="Pending Issues" 
+              value={loadingComplaints ? '...' : pendingIssues} 
+              icon={ShieldAlert} 
+              color="bg-orange-500" 
+              trend={`${pendingIssues} unresolved complaints`} 
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -39,20 +137,29 @@ function Stats() {
              <div className="ds-panel p-6">
                 <h3 className="text-lg font-bold mb-6">Recent Alerts</h3>
                 <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex gap-3 pb-4 border-b border-slate-100 last:border-0 last:pb-0">
-                      <div className="w-2 h-2 rounded-full bg-orange-500 mt-2"></div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">New complaint registered in Block B</p>
-                        <p className="text-[11px] text-slate-500">10 minutes ago</p>
-                      </div>
+                  {loadingComplaints || loadingNotices ? (
+                    <div className="py-8 flex justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
                     </div>
-                  ))}
+                  ) : recentAlerts.length === 0 ? (
+                    <p className="text-slate-400 text-sm py-4 text-center">No recent alerts or complaints.</p>
+                  ) : (
+                    recentAlerts.map((alert) => (
+                      <div key={alert.id} className="flex gap-3 pb-4 border-b border-slate-100 last:border-0 last:pb-0">
+                        <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${alert.color}`}></div>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800 leading-snug">{alert.title}</p>
+                          {alert.desc && <p className="text-xs text-slate-400 mt-0.5">{alert.desc}</p>}
+                          <p className="text-[10px] text-slate-400 mt-1 font-medium">{getRelativeTime(alert.time)}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
              </div>
           </div>
         </div>  
-    </div>
+     </div>
   )
 }
 

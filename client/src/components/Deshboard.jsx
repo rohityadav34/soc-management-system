@@ -55,13 +55,16 @@ const Dashboard = () => {
             path: "/dashboard/payments",
             icon: CreditCard,
           },
-
           {
             label: "Announcements",
             path: "/dashboard/notices",
             icon: Megaphone,
           },
-         
+          {
+            label: "Panic Alerts",
+            path: "/dashboard/emergency",
+            icon: ShieldAlert,
+          },
         ];
       case "resident":
         return [
@@ -77,6 +80,11 @@ const Dashboard = () => {
             label: "Announcements",
             path: "/dashboard/notices",
             icon: Megaphone,
+          },
+          {
+            label: "Panic Alerts",
+            path: "/dashboard/emergency",
+            icon: ShieldAlert,
           },
           { label: "Profile", path: "/dashboard/profile", icon: User },
         ];
