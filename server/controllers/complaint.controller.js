@@ -17,16 +17,11 @@ exports.createComplaint = async (req, res) => {
     });
 
     const allUsers = await User.find().populate('role');
-    const adminUsers = allUsers.filter((user) => user.role.role === 'admin');
+    const adminUsers = allUsers.filter((user) => user.role && (user.role.role === 'admin' || user.role.name === 'admin'));
 
-    console.log(adminUsers);
     adminUsers.forEach((admin) => {
-      console.log(notificationService.userConnectionDetails);
-      const socketId = notificationService.userConnectionDetails.get(admin._id.toString());
-      console.log(socketId);
-      
-    req.io.to(socketId).emit('new_complaint', {
-        message: 'new complaint filed by user',
+      notificationService.sendToUser(admin._id, 'new_complaint', {
+        message: `New complaint filed: "${complaint.title}"`,
         title: complaint.title,
         complaintId: complaint._id,
       });
@@ -111,6 +106,15 @@ exports.updateComplaint = async (req, res) => {
     if (!complaint) {
       return res.status(404).json({
         message: 'Complaint not found',
+      });
+    }
+
+    if (complaint.resident) {
+      notificationService.sendToUser(complaint.resident, 'complaint_status_update', {
+        message: `Your complaint "${complaint.title}" is now "${complaint.status}"`,
+        title: complaint.title,
+        complaintId: complaint._id,
+        status: complaint.status
       });
     }
 

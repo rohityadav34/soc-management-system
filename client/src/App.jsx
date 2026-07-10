@@ -5,8 +5,12 @@ import { io } from 'socket.io-client';
 import { Toaster, toast } from 'react-hot-toast';
 import axios from 'axios';
 import { Shield, Clock, Check, X } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { fetchComplaints } from './redux/slice/complaintSlice';
+import { fetchNotices } from './redux/slice/noticeSlice';
 
 function App() {
+  const dispatch = useDispatch();
   const [socket, setSocket] = useState(null);
   
   // Real-time visitor approval request states
@@ -47,6 +51,21 @@ function App() {
           borderRadius: '12px',
         },
       });
+      dispatch(fetchNotices());
+    });
+
+    // Listen for new complaints (For Admins)
+    socketInstance.on('new_complaint', (data) => {
+      toast.error(`⚠️ New Complaint: ${data.message || 'A resident filed a new complaint'}`, {
+        duration: 8000,
+        style: {
+          border: '1px solid #ef4444',
+          padding: '16px',
+          color: '#991b1b',
+          borderRadius: '12px',
+        },
+      });
+      dispatch(fetchComplaints());
     });
 
     // Listen for complaint updates
@@ -60,6 +79,7 @@ function App() {
           borderRadius: '12px',
         },
       });
+      dispatch(fetchComplaints());
     });
 
     return () => {
