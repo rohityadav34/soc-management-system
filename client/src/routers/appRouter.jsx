@@ -18,7 +18,6 @@ import Home from '../pages/Home';
 import Payments from '../pages/Payments';
 import Deliveries from '../pages/Deliveries';
 import Parking from '../pages/Parking';
-import Emergency from '../pages/Emergency';
 import ResidentDashboard from '../components/ResidentDashboard';
 import GuardDashboard from '../components/GuardDashboard';
 import Profile from '../pages/Profile';
@@ -63,7 +62,6 @@ function AppRoutes() {
             <Route path="visitors" element={<Visitors />} />
             <Route path="deliveries" element={<Deliveries />} />
             <Route path="parking" element={<Parking />} />
-            <Route path="emergency" element={<Emergency />} />
             <Route path="profile" element={<Profile />} />
           </Route>
         </Route>
