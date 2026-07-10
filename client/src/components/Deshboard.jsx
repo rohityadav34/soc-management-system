@@ -60,11 +60,6 @@ const Dashboard = () => {
             path: "/dashboard/notices",
             icon: Megaphone,
           },
-          {
-            label: "Panic Alerts",
-            path: "/dashboard/emergency",
-            icon: ShieldAlert,
-          },
         ];
       case "resident":
         return [
@@ -81,11 +76,6 @@ const Dashboard = () => {
             path: "/dashboard/notices",
             icon: Megaphone,
           },
-          {
-            label: "Panic Alerts",
-            path: "/dashboard/emergency",
-            icon: ShieldAlert,
-          },
           { label: "Profile", path: "/dashboard/profile", icon: User },
         ];
       case "security-guard":
@@ -96,11 +86,6 @@ const Dashboard = () => {
           { label: "Visitor Logs", path: "/dashboard/visitors", icon: Users },
           { label: "Deliveries", path: "/dashboard/deliveries", icon: Package },
           { label: "Parking Map", path: "/dashboard/parking", icon: Car },
-          {
-            label: "Panic Alerts",
-            path: "/dashboard/emergency",
-            icon: ShieldAlert,
-          },
         ];
       default:
         return [
