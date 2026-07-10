@@ -55,7 +55,7 @@ exports.register = async (req, res) => {
     const alluserData = await User.findById(NewUser._id).populate("role");
     console.log(alluserData);
 
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    const clientUrl = req.headers.origin || process.env.CLIENT_URL || "http://localhost:5173";
     const resetLink = `${clientUrl}/reset-setup-password?email=${encodeURIComponent(NewUser.email)}`;
 
     // Send email asynchronously (non-blocking) so that network blocks or latency

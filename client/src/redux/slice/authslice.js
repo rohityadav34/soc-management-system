@@ -8,8 +8,8 @@ const initialState = {
   isAuthenticated: Cookies.get('isAuthenticated') || null,
   name: Cookies.get('name') || null,
   email: Cookies.get('email') || null,
-  role:  Cookies.get('role') || null,
-  error : null 
+  role: Cookies.get('role') || null,
+  error: null
 };
 
 export const login = createAsyncThunk(
@@ -87,16 +87,16 @@ export const setupInitialPassword = createAsyncThunk(
 );
 
 
-export const Signout = createAsyncThunk('/auth_logout', async(_ , thunkApi)=>{
-try {
-  const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/logout` ,   null,
-    {
-      withCredentials: true,
-    });
-  return res.data
-} catch (error) {
-  
-}
+export const Signout = createAsyncThunk('/auth_logout', async (_, thunkApi) => {
+  try {
+    const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/logout`, null,
+      {
+        withCredentials: true,
+      });
+    return res.data
+  } catch (error) {
+
+  }
 })
 
 const authSlice = createSlice({
@@ -111,13 +111,13 @@ const authSlice = createSlice({
         state.loading = false;
         state.message = action.payload.message;
         state.isAuthenticated = action.payload.authenticated;
-        const { name, email, role  ,id} = action.payload.data;
+        const { name, email, role, id } = action.payload.data;
         state.name = name;
         state.role = role;
         state.email = email;
         Cookies.set('name', name);
         Cookies.set('email', email);
-        Cookies.set('id' , id)
+        Cookies.set('id', id)
         Cookies.set('role', role);
         Cookies.set('isAuthenticated', action.payload.authenticated);
         if (action.payload.token) {
@@ -158,16 +158,16 @@ const authSlice = createSlice({
       .addCase(Signout.rejected, (state, action) => {
         state.loading = false
         console.log(action.payload);
-      }).addCase(Signout.pending , (state,action)=>{
+      }).addCase(Signout.pending, (state, action) => {
 
-      }).addCase(Signout.fulfilled, (state,action)=>{
+      }).addCase(Signout.fulfilled, (state, action) => {
         console.log(action.payload)
         state.isAuthenticated = action.payload.authenticated;
         Cookies.remove('isAuthenticated')
         state.name = null;
         state.email = null;
         state.role = null;
-        
+
         Cookies.remove('name');
         Cookies.remove('email');
         Cookies.remove('role');
