@@ -4,9 +4,9 @@ import { useLocation } from 'react-router-dom';
 import { fetchUsers, clearUserError, clearUserMessage, createUser, updateUser, deactivateUser, deleteUser } from '../redux/slice/userSlice';
 import { fetchRoles } from '../redux/slice/roleSlice';
 import { fetchFlats } from '../redux/slice/flatSlice';
-import { 
-  Table, Thead, Tbody, Tr, Th, Td, 
-  Button, Badge, Dialog, Input 
+import {
+  Table, Thead, Tbody, Tr, Th, Td,
+  Button, Badge, Dialog, Input
 } from './ui';
 import { UserPlus, Search, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 
@@ -36,6 +36,7 @@ function ManageUsers() {
   }, [dispatch]);
 
   const handleOpenDialog = (user = null) => {
+
     if (user) {
       setEditUserId(user._id);
       setFormData({
@@ -47,7 +48,9 @@ function ManageUsers() {
       });
     } else {
       setEditUserId(null);
-      const guardRole = roles.find(r => r.role?.toLowerCase() === 'security-guard');
+      const guardRole = roles.find(
+        r => String(r.role ?? '').toLowerCase() === 'security-guard'
+      );
       const defaultRoleId = isGuardPage ? (guardRole?._id || '') : '';
       setFormData({ name: '', email: '', phone: '', roleId: defaultRoleId, flatId: '' });
     }
@@ -74,11 +77,12 @@ function ManageUsers() {
   };
 
   const selectedRole = roles.find(r => r._id === formData.roleId);
-  const isResident = selectedRole?.role?.toLowerCase() === 'resident';
+ const isResident =
+  String(selectedRole?.role ?? '').toLowerCase() === 'resident';
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     if (isGuardPage) {
       return matchesSearch && user.role?.role?.toLowerCase() === 'security-guard';
     }
@@ -94,13 +98,13 @@ function ManageUsers() {
             {isGuardPage ? "Guard Management" : "Manage Users"}
           </h1>
           <p className="text-slate-500 text-sm">
-            {isGuardPage 
-              ? "View and manage society security guards." 
+            {isGuardPage
+              ? "View and manage society security guards."
               : "View and manage all society members and staff."}
           </p>
         </div>
-        <Button 
-          leftIcon={<UserPlus size={18} />} 
+        <Button
+          leftIcon={<UserPlus size={18} />}
           onClick={() => handleOpenDialog()}
         >
           {isGuardPage ? "Add Security Guard" : "Add New User"}
@@ -111,7 +115,7 @@ function ManageUsers() {
       <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input 
+          <input
             type="text"
             placeholder="Search by name or email..."
             className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
@@ -155,7 +159,7 @@ function ManageUsers() {
                     </Td>
                     <Td>
                       <Badge variant="slate" className="capitalize">
-                        {user.role?.role || 'Unknown'}  
+                        {user.role?.role || 'Unknown'}
                       </Badge>
                     </Td>
                     <Td>
@@ -168,13 +172,13 @@ function ManageUsers() {
                     </Td>
                     <Td className="text-right">
                       <div className="flex justify-end gap-2">
-                        <button 
+                        <button
                           onClick={() => handleOpenDialog(user)}
                           className="p-1.5 text-slate-400 hover:text-primary-600 transition-colors"
                         >
                           <Edit2 size={16} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDelete(user._id)}
                           className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
                           title="Delete User"
@@ -210,17 +214,17 @@ function ManageUsers() {
         }
       >
         <div className="space-y-4 py-2">
-          <Input 
-            label="Full Name" 
-            placeholder="John Doe" 
+          <Input
+            label="Full Name"
+            placeholder="John Doe"
             name="name"
             value={formData.name}
             onChange={handleChange}
           />
-          <Input 
-            label="Email Address" 
-            type="email" 
-            placeholder="john@example.com" 
+          <Input
+            label="Email Address"
+            type="email"
+            placeholder="john@example.com"
             name="email"
             value={formData.email}
             onChange={handleChange}
@@ -229,14 +233,14 @@ function ManageUsers() {
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-700 ml-0.5">Role</label>
               {isGuardPage ? (
-                <input 
-                  type="text" 
-                  value="Security Guard" 
-                  disabled 
+                <input
+                  type="text"
+                  value="Security Guard"
+                  disabled
                   className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 cursor-not-allowed capitalize font-medium outline-none"
                 />
               ) : (
-                <select 
+                <select
                   name="roleId"
                   value={formData.roleId}
                   onChange={handleChange}
@@ -251,21 +255,21 @@ function ManageUsers() {
                 </select>
               )}
             </div>
-            <Input 
-              label="Phone Number" 
-              placeholder="+1 234 567 890" 
+            <Input
+              label="Phone Number"
+              placeholder="+1 234 567 890"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
             />
           </div>
-          
+
           {isResident && (
             <div className="space-y-1.5 border-t border-slate-100 pt-4">
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
                 Assign Flat
               </label>
-              <select 
+              <select
                 name="flatId"
                 value={formData.flatId}
                 onChange={handleChange}

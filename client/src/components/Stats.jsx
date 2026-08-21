@@ -29,16 +29,27 @@ function Stats() {
   }, [dispatch]);
 
   // Dynamic calculations for stats cards
-  const totalResidents = users.filter(u => u.role?.name?.toLowerCase() === 'resident' || u.role?.toLowerCase() === 'resident').length;
-  
-  const totalFlats = flats.length;
-  const occupiedFlats = flats.filter(f => f.status?.toLowerCase() === 'occupied').length;
-  const occupancyRate = totalFlats > 0 ? Math.round((occupiedFlats / totalFlats) * 100) : 0;
+ // Safely extract role name whether `role` is a string, an object
+// like { role: "resident" }, or an object like { name: "resident" }.
+const getRoleName = (u) => {
+  const r = u?.role;
+  if (!r) return '';
+  if (typeof r === 'string') return r.toLowerCase();
+  if (typeof r === 'object') return String(r.role ?? r.name ?? '').toLowerCase();
+  return '';
+};
 
-  const activeGuards = users.filter(u => {
-    const roleName = u.role?.name?.toLowerCase() || u.role?.toLowerCase() || '';
-    return roleName === 'security-guard' || roleName === 'security_guard' || roleName === 'staff';
-  }).length;
+// Dynamic calculations for stats cards
+const totalResidents = users.filter(u => getRoleName(u) === 'resident').length;
+
+const totalFlats = flats.length;
+const occupiedFlats = flats.filter(f => f.status?.toLowerCase() === 'occupied').length;
+const occupancyRate = totalFlats > 0 ? Math.round((occupiedFlats / totalFlats) * 100) : 0;
+
+const activeGuards = users.filter(u => {
+  const roleName = getRoleName(u);
+  return roleName === 'security-guard' || roleName === 'security_guard' || roleName === 'staff';
+}).length;
 
   const pendingIssues = complaints.filter(c => c.status?.toLowerCase() === 'pending').length;
 

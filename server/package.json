@@ -8,6 +8,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.5.0",
     "nodemailer": "^8.0.7",
+    "nodemon": "^3.1.14",
     "socket.io": "^4.8.3"
   },
   "name": "backend",

@@ -25,7 +25,8 @@ const Dashboard = () => {
   const { role } = useSelector((state) => state.auth);
 
   const getNavItems = () => {
-    switch (role?.toLowerCase()) {
+   
+    switch (String(role ?? "").toLowerCase()) {
       case "admin":
         return [
           {
